@@ -104,4 +104,12 @@ public class AuthServiceImpl implements AuthService {
         Object sessionUser = session.getAttribute(UserConstant.LOGIN_USER_STATE);
         return (User) sessionUser;
     }
+
+    @Override
+    public void authLogout(HttpSession session) {
+        Object sessionUser = session.getAttribute(UserConstant.LOGIN_USER_STATE);
+        if (Objects.nonNull(sessionUser)){
+            session.removeAttribute(UserConstant.LOGIN_USER_STATE);
+        }
+    }
 }

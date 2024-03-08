@@ -11,4 +11,7 @@ public interface AuthService {
     Long authRegister(String username,String password,String checkPassword);
 
     User getLoginInfo(HttpSession session);
+
+    void authLogout(HttpSession session);
+
 }

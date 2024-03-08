@@ -53,6 +53,12 @@ public class AuthController {
         return UserConvert.INSTANCE.convertResponse(user);
     }
 
+    @GetMapping("/logout")
+    @Operation(summary = "用户注销")
+    public void authLogout(HttpSession session){
+        authService.authLogout(session);
+    }
+
     /*@Operation(summary = "附件上传",description = "附近上传-xxx",requestBody = @RequestBody(content = {
             @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,schema = @Schema(type = "object"),
                     schemaProperties = {
