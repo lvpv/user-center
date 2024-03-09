@@ -102,7 +102,12 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public User getLoginInfo(HttpSession session) {
         Object sessionUser = session.getAttribute(UserConstant.LOGIN_USER_STATE);
-        return (User) sessionUser;
+         if (Objects.isNull(sessionUser)){
+             return null;
+         }
+         User user = (User) sessionUser;
+        Long id = user.getId();
+        return userService.getById(id);
     }
 
     @Override
