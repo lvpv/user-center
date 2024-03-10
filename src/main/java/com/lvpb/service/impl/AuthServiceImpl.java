@@ -4,6 +4,8 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.lvpb.constant.CommonConstant;
 import com.lvpb.constant.UserConstant;
+import com.lvpb.exception.BusinessException;
+import com.lvpb.exception.ExceptionCode;
 import com.lvpb.model.domain.User;
 import com.lvpb.service.AuthService;
 import com.lvpb.service.UserService;
@@ -32,14 +34,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public User authLogin(String username, String password, HttpSession session) {
         if (StrUtil.isAllBlank(username, password)) {
-            return null;
+            log.info("用户名或密码为空,username:{},password:{}", username, password);
+            throw new BusinessException(ExceptionCode.REQUEST_PARAMS_IS_EMPTY, "用户名或密码为空");
         }
-        if (username.length() < 4 || username.length() > 15) {
-            return null;
-        }
-        if (password.length() < 8 || password.length() > 20) {
-            return null;
-        }
+        validateUsernameAndPassword(username, password);
         // 检测密码特殊字符
         // 加密
         String encryptPassword = PasswordEncrypt.passwordEncrypt(password);
@@ -48,8 +46,8 @@ public class AuthServiceImpl implements AuthService {
                 .eq(User::getPassword, encryptPassword)
                 .last(CommonConstant.QUERY_ONE_SQL));
         if (Objects.isNull(user)) {
-            log.info("用户名或密码错误,username:{}", username);
-            return null;
+            log.info("用户名或密码错误，username:{},password:{}", username, password);
+            throw new BusinessException(ExceptionCode.REQUEST_PARAMS_ERROR, "用户名或密码错误");
         }
         // 脱敏
         session.setAttribute(UserConstant.LOGIN_USER_STATE, user);
@@ -68,21 +66,23 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public Long authRegister(String username, String password, String checkPassword) {
         if (StrUtil.isAllBlank(username, password, checkPassword)) {
-            return -1L;
+            log.info("用户名、密码或确认密码为空,username:{},password:{},checkPassword:{}", username, password, checkPassword);
+            throw new BusinessException(ExceptionCode.REQUEST_PARAMS_IS_EMPTY, "用户名、密码或确认密码为空");
         }
-        if (username.length() < 4 || username.length() > 15) {
-            return -1L;
-        }
-        if (password.length() < 8 || password.length() > 20 || checkPassword.length() < 8 || checkPassword.length() > 20) {
-            return -1L;
+        validateUsernameAndPassword(username, password);
+        if (checkPassword.length() < 8 || checkPassword.length() > 20) {
+            log.info("确认密码长度错误，checkPassword:{}", checkPassword);
+            throw new BusinessException(ExceptionCode.REQUEST_PARAMS_ERROR, "确认密码长度错误");
         }
         if (!password.equals(checkPassword)) {
-            return -1L;
+            log.info("两次密码不一致,password:{},checkPassword:{}", password, checkPassword);
+            throw new BusinessException(ExceptionCode.REQUEST_PARAMS_ERROR, "两次密码不一致");
         }
         // 检测密码特殊字符
         long count = userService.count(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
         if (count > 0) {
-            return -1L;
+            log.info("当前用户名已存在,username:{}", username);
+            throw new BusinessException(ExceptionCode.REQUEST_DATA_REPEAT, "当前用户名已存在");
         }
         String encryptPassword = PasswordEncrypt.passwordEncrypt(password);
         User user = new User();
@@ -102,10 +102,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public User getLoginInfo(HttpSession session) {
         Object sessionUser = session.getAttribute(UserConstant.LOGIN_USER_STATE);
-         if (Objects.isNull(sessionUser)){
-             return null;
-         }
-         User user = (User) sessionUser;
+        if (Objects.isNull(sessionUser)) {
+            throw new BusinessException(ExceptionCode.REQUEST_DATA_NOT_EXIST, "用户信息不存在");
+        }
+        User user = (User) sessionUser;
         Long id = user.getId();
         return userService.getById(id);
     }
@@ -113,8 +113,19 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void authLogout(HttpSession session) {
         Object sessionUser = session.getAttribute(UserConstant.LOGIN_USER_STATE);
-        if (Objects.nonNull(sessionUser)){
+        if (Objects.nonNull(sessionUser)) {
             session.removeAttribute(UserConstant.LOGIN_USER_STATE);
+        }
+    }
+
+    private void validateUsernameAndPassword(String username, String password) {
+        if (username.length() < 4 || username.length() > 15) {
+            log.info("用户名格式错误，username:{}", username);
+            throw new BusinessException(ExceptionCode.REQUEST_PARAMS_ERROR, "用户名长度错误");
+        }
+        if (password.length() < 8 || password.length() > 20) {
+            log.info("密码格式错误，password:{}", password);
+            throw new BusinessException(ExceptionCode.REQUEST_PARAMS_ERROR, "密码长度错误");
         }
     }
 }

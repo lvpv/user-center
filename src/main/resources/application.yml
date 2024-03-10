@@ -49,6 +49,6 @@ springdoc:
     enabled: true
   default-flat-param-object: false
   group-configs:
-    - group: 'user-center'
+    - group: '用户中心'
       paths-to-match: '/**'
       packages-to-scan: com.lvpb.controller

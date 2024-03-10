@@ -1,4 +1,4 @@
-package com.lvpb.model.request;
+package com.lvpb.model.request.auth;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

@@ -1,14 +1,17 @@
 package com.lvpb.enums;
 
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum RoleEnum {
-    DEFAULT(0,"普通用户"),
-    ADMIN(1,"管理员");
+public enum GenderEnum {
+
+    UN_KNOW(0,"保密"),
+    MAN(1,"男"),
+    WOMAN(2,"女");
     private final int code;
 
-    private final String role;
+    private final String gender;
 }
